@@ -1,4 +1,4 @@
-total = 0
+total = 0.0
 
 for line in open("Data/portfolio.dat"):
     ticker, shares, price = line.split()
