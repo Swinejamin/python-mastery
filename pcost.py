@@ -18,4 +18,5 @@ def portfolio_cost(filename):
     return total_cost
 
 
-print(portfolio_cost("../../Data/portfolio3.dat"))
+if __name__ == "__main__":
+    print("portfolio3 total:", portfolio_cost("Data/portfolio3.dat"))
