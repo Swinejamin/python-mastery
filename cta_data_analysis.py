@@ -4,18 +4,23 @@ from pprint import pprint
 import tracemalloc
 from collections import Counter, defaultdict
 
+from sys import intern
+from reader import read_csv_as_dicts
+
 
 def solutions():
     from collections import defaultdict, Counter
 
-    rows = read_file_as_type()
+    solution_rows = read_file_as_type(
+        type_name="data_collection", converters=[intern, intern, intern, int]
+    )
 
     # --------------------------------------------------
     # Question 1:  How many bus routes are in Chicago?
     # Solution: Use a set to get unique values.
 
     routes = set()
-    for row in rows:
+    for row in solution_rows:
         routes.add(row["route"])
 
     answer1 = len(routes)
@@ -25,7 +30,7 @@ def solutions():
     # Solution: Make dictionary with composite keys
 
     by_route_date = {}
-    for row in rows:
+    for row in solution_rows:
         by_route_date[row["route"], row["date"]] = row["rides"]
 
     answer2 = by_route_date["22", "02/02/2011"]
@@ -34,7 +39,7 @@ def solutions():
     # Question 3: Total number of rides per route
     # Solution: Use a counter to tabulate things
     rides_per_route = Counter()
-    for row in rows:
+    for row in solution_rows:
         rides_per_route[row["route"]] += row["rides"]
 
     answer3 = list()
@@ -50,7 +55,7 @@ def solutions():
     answer4 = list()
     rides_by_year = defaultdict(Counter)
 
-    for row in rows:
+    for row in solution_rows:
         year = row["date"].split("/")[2]
         rides_by_year[year][row["route"]] += row["rides"]
 
@@ -72,10 +77,21 @@ rides_by_year = defaultdict(Counter)
 unique_routes = set()
 by_route_date = {}
 
-rows = read_file_as_type("Data/ctabus.csv")
+rows = read_file_as_type(
+    filename="Data/ctabus.csv",
+    type_name="data_collection",
+    converters=[intern, intern, intern, int],
+)
+
+status = 0
 
 for row in rows:
+
     route, date, daytype, rides = row.values()
+    if status < 10:
+        pprint({"route": route, "date": date, "daytype": daytype, "rides": rides})
+        status += 1
+
     year = date.split("/")[2]
 
     unique_routes.add(route)

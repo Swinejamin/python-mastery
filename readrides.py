@@ -1,33 +1,30 @@
 import csv
 import tracemalloc
 from collections.abc import Sequence
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 
-class RideData(Sequence):
-    def __init__(self):
-        self.routes = []  # Columns
-        self.dates = []
-        self.daytypes = []
-        self.numrides = []
+class DataCollection(Sequence):
+    def __init__(self, columns):
+        self.column_names = list(columns)
+        self.column_data = list(columns.values())
 
     def __len__(self):
-        # All lists assumed to have the same length
-        return len(self.routes)
+        return len(self.column_data.values()[0])
 
-    def __getitem__(self, index):
-        return {
-            "route": self.routes[index],
-            "date": self.dates[index],
-            "daytype": self.daytypes[index],
-            "rides": self.numrides[index],
-        }
+    def __getitem__(self, key):
+        if isinstance(key, slice):
+            slicer = DataCollection()
+            slicer.column_data = {
+                header: data_list[key] for header, data_list in self.column_data.items()
+            }
+            return slicer
+        elif isinstance(key, int):
+            return dict(zip(self.column_names, (col[key] for col in self.column_data)))
 
     def append(self, d):
-        self.routes.append(d["route"])
-        self.dates.append(d["date"])
-        self.daytypes.append(d["daytype"])
-        self.numrides.append((d["rides"]))
+        for key, val in d.items():
+            self.column_data[key].append(val)
 
 
 class Row:
@@ -54,11 +51,37 @@ class RowWithSlots:
 # Row = namedtuple('Row',('route','date','daytype','rides'))
 
 
+def read_csv_as_columns(filename, types):
+    columns = collections.defaultdict(list)
+    with open(filename) as f:
+        rows = csv.reader(f)
+        headers = next(rows)
+        for row in rows:
+            for name, func, val in zip(headers, types, row):
+                columns[name].append(func(val))
+
+    return DataCollection(columns)
+
+
+def read_rides_as_data_collection(filename, converters):
+
+    columns = defaultdict(list)
+
+    with open(filename) as f:
+        rows = csv.reader(f)
+        headers = next(rows)
+        for row in rows:
+            for name, func, val in zip(headers, converters, row):
+                columns[name].append(func(val))
+
+    return DataCollection(columns)
+
+
 def read_rides_as_dicts(filename):
     """
     Read the bus ride data as a list of dicts
     """
-    records = RideData()
+    records = DataCollection()
     with open(filename) as f:
         rows = csv.reader(f)
         headings = next(rows)  # Skip headers
@@ -160,7 +183,7 @@ def read_rides_as_named_tuples(filename):
     return records
 
 
-def read_rides_with_generator(filename):
+def read_rides_as_generator(filename):
     f = open(filename)
     f_csv = csv.reader(f)
     headers = next(f_csv)
@@ -196,33 +219,15 @@ def read_rides_as_columns(filename):
     return dict(routes=routes, dates=dates, daytypes=daytypes, numrides=numrides)
 
 
-def read_file_as_type(filename="Data/ctabus.csv", type_name="dict"):
+def read_file_as_type(filename="Data/ctabus.csv", type_name="dict", converters=[]):
     tracemalloc.start()
     tracemalloc.clear_traces()
 
     results = None
 
     try:
-        if type_name == "columns":
-            results = read_rides_with_generator(filename)
 
-        if type_name == "generator":
-            results = read_rides_as_columns(filename)
-
-        if type_name == "named_tuple":
-            results = read_rides_as_tuples(filename)
-
-        elif type_name == "dict":
-            results = read_rides_as_dicts(filename)
-
-        elif type_name == "instance":
-            results = read_rides_as_instances(filename)
-
-        elif type_name == "slots":
-            results = read_rides_as_instances_with_slots(filename)
-
-        else:
-            results = read_rides_as_tuples(filename)
+        results = globals()[f"read_rides_as_{type_name}"](filename, converters)
 
         current, peak = tracemalloc.get_traced_memory()
 
