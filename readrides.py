@@ -52,7 +52,7 @@ class RowWithSlots:
 
 
 def read_csv_as_columns(filename, types):
-    columns = collections.defaultdict(list)
+    columns = defaultdict(list)
     with open(filename) as f:
         rows = csv.reader(f)
         headers = next(rows)
