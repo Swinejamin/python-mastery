@@ -75,6 +75,4 @@ def read_file_as_type(filename="Data/ctabus.csv", type_name="dict", converters=[
     except Exception as e:
         print(e)
 
-    pprint(results)
-
     return results
