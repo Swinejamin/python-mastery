@@ -25,7 +25,6 @@ class TableFormatter(ABC):
     def print_line(line=""):
         print(line)
 
-    @staticmethod
     def print(self):
         for line in self._list_to_print:
             self.print_line(line)

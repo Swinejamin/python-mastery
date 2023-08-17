@@ -3,12 +3,9 @@ import sys
 from sys import intern, stdout
 from decimal import Decimal
 from colored import Fore, Back, Style
-import os
 
 import reader
 from tableformat import create_formatter, print_table, TableFormatter
-
-os.system("")
 
 
 class redirect_stdout:
@@ -126,7 +123,7 @@ def read_portfolio(filename="Data/portfolio.csv", cls=Stock):
     return stocks
 
 
-portfolio = reader.read_csv_as_instances("Data/portfolio.csv", Stock)
+portfolio = reader.read_csv_as_instances(filename="Data/portfolio.csv", cls=Stock)
 
 
 def check_formatters():
@@ -135,4 +132,4 @@ def check_formatters():
         print_table(portfolio, ["name", "shares", "price"], formatter)
 
 
-# check_formatters()
+check_formatters()
