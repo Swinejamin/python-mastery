@@ -61,8 +61,12 @@ def print_table(records, fields, formatter):
         )
 
     formatter.headings(fields)
+
     for r in records:
-        rowdata = [getattr(r, fieldname) for fieldname in fields]
+        rowdata = [
+            r[fieldname] if type(r) == dict else getattr(r, fieldname)
+            for fieldname in fields
+        ]
         formatter.row(rowdata)
 
     formatter.print()
