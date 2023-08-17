@@ -1,32 +1,30 @@
 import csv
 
 
-def csv_as_dicts(lines, types, *, headers=None):
-    """
-    Convert lines of CSV data into a list of dictionaries
-    """
-    records = []
+def convert_csv(lines, converter, *, headers=None):
     rows = csv.reader(lines)
     if headers is None:
         headers = next(rows)
-    for row in rows:
-        record = {name: func(val) for name, func, val in zip(headers, types, row)}
-        records.append(record)
-    return records
+
+    return list(map(lambda row: converter(headers, row), rows))
+
+
+def csv_as_dicts(lines, types, *, headers=None):
+    return convert_csv(
+        lines,
+        lambda headers, row: {
+            name: func(val) for name, func, val in zip(headers, types, row)
+        },
+        headers=headers,
+    )
 
 
 def csv_as_instances(lines, cls, *, headers=None):
-    """
-    Convert lines of CSV data into a list of instances
-    """
-    records = []
-    rows = csv.reader(lines)
-    if headers is None:
-        headers = next(rows)
-    for row in rows:
-        record = cls.from_row(row)
-        records.append(record)
-    return records
+    return convert_csv(
+        lines,
+        lambda headers, row: cls.from_row(row),
+        headers=headers,
+    )
 
 
 def read_csv_as_dicts(filename, types, *, headers=None):
