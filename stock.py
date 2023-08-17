@@ -40,6 +40,11 @@ class Stock:
         self.shares = shares
         self.price = price
 
+    def __setattr__(self, name, value):
+        if name not in {"name", "shares", "price"}:
+            raise AttributeError("No attribute %s" % name)
+        super().__setattr__(name, value)
+
     def __repr__(self):
         return f"Stock({self.name!r}, {self.shares!r}, {self.price!r})"
 
@@ -83,7 +88,7 @@ def read_portfolio(filename="Data/portfolio.csv", cls=Stock):
     return stocks
 
 
-portfolio = reader.read_csv_as_instances(filename="Data/portfolio.csv", cls=Stock)
+# portfolio = reader.read_csv_as_instances(filename="Data/portfolio.csv", cls=Stock)
 
 format_list = [
     {"name": "text", "column_formats": ['"%s"', "%d", "%0.2f"]},
@@ -98,7 +103,10 @@ format_list = [
 def check_formatters():
     for format_to_use in format_list:
         formatter = create_formatter(**format_to_use)
-        print_table(portfolio, ["name", "shares", "price"], formatter)
+        # print_table(portfolio, ["name", "shares", "price"], formatter)
 
 
-check_formatters()
+# check_formatters()
+file = open("Data/portfolio.csv")
+
+print(reader.csv_as_dicts(file, [str, int, float]))
