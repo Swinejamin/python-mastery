@@ -4,6 +4,8 @@ from sys import intern, stdout
 from decimal import Decimal
 from colored import Fore, Back, Style
 
+from validate import PositiveFloat, PositiveInteger, Positive
+
 import reader
 from tableformat import (
     create_formatter,
@@ -76,11 +78,7 @@ class Stock:
 
     @shares.setter
     def shares(self, value):
-        converted_value = self.check_type(value, "shares")
-
-        if converted_value < 0:
-            raise ValueError("shares must be >= 0")
-        self._shares = converted_value
+        self._shares = PositiveInteger.check(value)
 
     @property
     def price(self):
@@ -88,17 +86,14 @@ class Stock:
 
     @price.setter
     def price(self, value):
-        converted_value = self.check_type(value, "price")
-        if converted_value <= 0:
-            raise ValueError("price must be > 0")
-        self._price = converted_value
+        self._price = PositiveFloat.check(value)
 
     @property
     def cost(self):
         return self._shares * self._price
 
     def sell(self, nshares):
-        self._shares -= nshares
+        self._shares -= Positive.check(nshares)
 
 
 class DStock(Stock):
@@ -144,13 +139,3 @@ def check_formatters():
     for format_to_use in format_list:
         formatter = create_formatter(**format_to_use)
         print_table(portfolio, ["name", "shares", "price"], formatter)
-
-
-check_formatters()
-
-
-# class PortfolioFormatter(UpperHeadersMixin, TextTableFormatter):
-#     formats = ["%s", "%d", "%0.2f"]
-#
-#
-# print_table(portfolio, ["name", "shares", "price"], PortfolioFormatter())
