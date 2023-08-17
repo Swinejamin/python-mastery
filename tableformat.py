@@ -1,6 +1,5 @@
 from pprint import pprint
 from colored import Fore, Back, Style
-from html5print import HTMLBeautifier
 
 
 class TableFormatter:
@@ -92,43 +91,57 @@ class CSVTableFormatter(TableFormatter):
         self._list_to_print.append(f"{','.join(f'{cell}' for cell in rowdata)}")
 
 
-def html_tag(tag, content, color="yellow", indent=0):
+def html_tag(tag, content, color="yellow", indent=0, new_line=True):
     tag_style = getattr(Fore, color) + Style.bold
-    return f"{tag_style}<{tag}>{Style.reset}{content}{tag_style}</{tag}>{Style.reset}"
+
+    whitespace = "\n" if new_line else ""
+
+    indent_string = "\t" * indent if new_line else ""
+
+    tag_open = f"{whitespace}{indent_string}{tag_style}<{tag}>{Style.reset}"
+    tag_close = f"{tag_style}{whitespace}{indent_string}</{tag}>{Style.reset}"
+    return f"{tag_open}{content}{tag_close}"
 
 
 def tr(content):
-    return html_tag(tag="tr", content=content, indent=2)
+    return html_tag(tag="tr", content=content, indent=1)
 
 
 class HTMLTableFormatter(TableFormatter):
     def headings(self, headers):
         self._list_to_print.append(
-            html_tag(
-                tag="thead",
-                content=html_tag(
-                    tag="tr",
-                    content="".join(
-                        html_tag(
-                            tag="th",
-                            content=f"{Style.bold} {header.upper()} {Style.reset}",
-                            color="green",
-                        )
-                        for header in headers
-                    ),
+            tr(
+                content="\n\t\t"
+                + "".join(
+                    html_tag(
+                        tag="th",
+                        content=f"{Style.bold} {header.upper()} {Style.reset}",
+                        color="green",
+                        new_line=False,
+                    )
+                    for header in headers
                 ),
             )
         )
 
     def row(self, rowdata):
-        tr("".join(html_tag(tag="td", content=cell, indent=3) for cell in rowdata))
+        self._list_to_print.append(
+            tr(
+                "\n\t\t"
+                + "".join(
+                    html_tag(tag="td", content=cell, new_line=False) for cell in rowdata
+                )
+            )
+        )
 
     def print(self):
-        table_header = html_tag(tag="thead", content=self._list_to_print[0], indent=1)
+        table_header = html_tag(tag="thead", content=self._list_to_print[0], indent=0)
+        print(self._list_to_print[1:])
+
         table_body = html_tag(
             tag="tbody",
-            indent=1,
-            content=[self.row(r) for r in self._list_to_print],
+            indent=0,
+            content=f'{"".join(self._list_to_print[1:])}',
         )
         print(html_tag(tag="table", content=f"{table_header}{table_body}", indent=0))
 
