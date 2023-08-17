@@ -46,7 +46,7 @@ class Stock:
         super().__setattr__(name, value)
 
     def __repr__(self):
-        return f"Stock({self.name!r}, {self.shares!r}, {self.price!r})"
+        return f"{type(self).__name__}({self.name!r}, {self.shares!r}, {self.price!r})"
 
     @classmethod
     def from_row(cls, row):
@@ -90,6 +90,11 @@ def read_portfolio(filename="Data/portfolio.csv", cls=Stock):
 
 # portfolio = reader.read_csv_as_instances(filename="Data/portfolio.csv", cls=Stock)
 
+file = open("Data/portfolio.csv")
+
+portfolio = reader.csv_as_instances(lines=file, cls=Stock)
+# portfolio = reader.csv_as_dicts(lines=file, types=[str, int, float])
+
 format_list = [
     {"name": "text", "column_formats": ['"%s"', "%d", "%0.2f"]},
     {"name": "text", "upper_headers": True},
@@ -103,10 +108,12 @@ format_list = [
 def check_formatters():
     for format_to_use in format_list:
         formatter = create_formatter(**format_to_use)
-        # print_table(portfolio, ["name", "shares", "price"], formatter)
+
+        print_table(
+            records=portfolio,
+            fields=["name", "shares", "price"],
+            formatter=formatter,
+        )
 
 
-# check_formatters()
-file = open("Data/portfolio.csv")
-
-print(reader.csv_as_dicts(file, [str, int, float]))
+check_formatters()
