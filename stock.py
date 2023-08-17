@@ -4,7 +4,7 @@ from sys import intern, stdout
 from decimal import Decimal
 from colored import Fore, Back, Style
 
-from validate import PositiveFloat, PositiveInteger, Positive
+from validate import PositiveFloat, PositiveInteger, Positive, String, NonEmptyString
 
 import reader
 from tableformat import (
@@ -29,8 +29,11 @@ class redirect_stdout:
 
 
 class Stock:
-    __slots__ = ("name", "_shares", "_price")
     _types = {"name": str, "shares": int, "price": float}
+
+    name = NonEmptyString()
+    shares = PositiveInteger()
+    price = PositiveFloat()
 
     def __init__(self, name, shares, price):
         self.name = name
@@ -38,62 +41,19 @@ class Stock:
         self.price = price
 
     def __repr__(self):
-        # Note: The !r format code produces the repr() string
-        return f"{type(self).__name__}({f'{Fore.blue + Style.bold}{self.name!r}{Style.reset}'}, {Fore.cyan}{self.shares!r}{Style.reset}, {Fore.green}{self.price!r}{Style.reset})"
-
-    def __eq__(self, other):
-        return isinstance(other, Stock) and (
-            (self.name, self.shares, self.price)
-            == (other.name, other.shares, other.price)
-        )
+        return f"Stock({self.name!r}, {self.shares!r}, {self.price!r})"
 
     @classmethod
     def from_row(cls, row):
         values = [func(val) for func, val in zip(cls._types.values(), row)]
         return cls(*values)
 
-    @classmethod
-    def check_type(cls, value, type_key):
-        type_to_check = cls._types.get(type_key)
-        if not isinstance(value, type_to_check):
-            try:
-                converted_value = type_to_check(value)
-
-                print(
-                    f"Value for {type_key} ({value}) converted from {type(value).__name__} to {type_to_check.__name__} ({converted_value})"
-                )
-
-                return converted_value
-
-            except ValueError:
-                raise TypeError(
-                    f"Expected {type_to_check.__name__}, received --{value}-- with type {type(value).__name__}"
-                )
-
-        return value
-
-    @property
-    def shares(self):
-        return self._shares
-
-    @shares.setter
-    def shares(self, value):
-        self._shares = PositiveInteger.check(value)
-
-    @property
-    def price(self):
-        return self._price
-
-    @price.setter
-    def price(self, value):
-        self._price = PositiveFloat.check(value)
-
     @property
     def cost(self):
-        return self._shares * self._price
+        return self.shares * self.price
 
     def sell(self, nshares):
-        self._shares -= Positive.check(nshares)
+        self.shares -= nshares
 
 
 class DStock(Stock):
@@ -139,3 +99,6 @@ def check_formatters():
     for format_to_use in format_list:
         formatter = create_formatter(**format_to_use)
         print_table(portfolio, ["name", "shares", "price"], formatter)
+
+
+check_formatters()
