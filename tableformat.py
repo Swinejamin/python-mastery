@@ -3,6 +3,19 @@ from colored import Fore, Back, Style
 from abc import ABC, abstractmethod
 
 
+class ColumnFormatMixin:
+    formats = []
+
+    def row(self, rowdata):
+        rowdata = [(fmt % d) for fmt, d in zip(self.formats, rowdata)]
+        super().row(rowdata)
+
+
+class UpperHeadersMixin:
+    def headings(self, headers):
+        super().headings([h.upper() for h in headers])
+
+
 class TableFormatter(ABC):
     def __init__(self):
         self._width = 0
@@ -47,14 +60,6 @@ def print_table(records, fields, formatter):
             f"Expected a TableFormatter, received ~{type(formatter).__name__})~"
         )
 
-    print(
-        Fore.white
-        + Style.bold
-        + Back.dark_sea_green_4b
-        + "  "
-        + " ".join(type(formatter).__name__.upper().split("TABLE"))
-    )
-    print(Style.reset + "\n")
     formatter.headings(fields)
     for r in records:
         rowdata = [getattr(r, fieldname) for fieldname in fields]
@@ -100,7 +105,7 @@ class CSVTableFormatter(TableFormatter):
         width = max(self._width, *[(len(h) + 9) // 10 * 10 for h in headers])
         self._width = width
 
-        self._list_to_print.append(",".join(header.upper() for header in headers))
+        self._list_to_print.append(",".join(header for header in headers))
         self._list_to_print.append("")
 
     def row(self, rowdata):
@@ -131,7 +136,7 @@ class HTMLTableFormatter(TableFormatter):
                 + "".join(
                     html_tag(
                         tag="th",
-                        content=f"{Style.bold} {header.upper()} {Style.reset}",
+                        content=f"{Style.bold} {header} {Style.reset}",
                         color="green",
                         new_line=False,
                     )
@@ -161,7 +166,18 @@ class HTMLTableFormatter(TableFormatter):
         print(html_tag(tag="table", content=f"{table_header}{table_body}", indent=0))
 
 
-def create_formatter(name):
+def create_formatter(name, column_formats=None, upper_headers=False):
+    print(
+        "\n"
+        + Fore.white
+        + Style.bold
+        + Back.dark_sea_green_4b
+        + "  "
+        + name.upper()
+        + "\t\t"
+        + Style.reset
+    )
+
     if name == "text":
         formatter_cls = TextTableFormatter
     elif name == "csv":
@@ -170,4 +186,15 @@ def create_formatter(name):
         formatter_cls = HTMLTableFormatter
     else:
         raise RuntimeError("Unknown format %s" % name)
+
+    if column_formats:
+
+        class formatter_cls(ColumnFormatMixin, formatter_cls):
+            formats = column_formats
+
+    if upper_headers:
+
+        class formatter_cls(UpperHeadersMixin, formatter_cls):
+            pass
+
     return formatter_cls()

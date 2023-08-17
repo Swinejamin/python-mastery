@@ -5,7 +5,12 @@ from decimal import Decimal
 from colored import Fore, Back, Style
 
 import reader
-from tableformat import create_formatter, print_table, TableFormatter
+from tableformat import (
+    create_formatter,
+    print_table,
+    TextTableFormatter,
+    UpperHeadersMixin,
+)
 
 
 class redirect_stdout:
@@ -125,11 +130,27 @@ def read_portfolio(filename="Data/portfolio.csv", cls=Stock):
 
 portfolio = reader.read_csv_as_instances(filename="Data/portfolio.csv", cls=Stock)
 
+format_list = [
+    {"name": "text", "column_formats": ['"%s"', "%d", "%0.2f"]},
+    {"name": "text", "upper_headers": True},
+    {"name": "csv", "upper_headers": False},
+    {"name": "csv", "upper_headers": True, "column_formats": ['"%s"', "%d", "%0.2f"]},
+    {"name": "html", "upper_headers": False},
+    {"name": "html", "upper_headers": True, "column_formats": ['"%s"', "%d", "%0.2f"]},
+]
+
 
 def check_formatters():
-    for format_to_use in ["text", "csv", "html"]:
-        formatter = create_formatter(format_to_use)
+    for format_to_use in format_list:
+        formatter = create_formatter(**format_to_use)
         print_table(portfolio, ["name", "shares", "price"], formatter)
 
 
 check_formatters()
+
+
+# class PortfolioFormatter(UpperHeadersMixin, TextTableFormatter):
+#     formats = ["%s", "%d", "%0.2f"]
+#
+#
+# print_table(portfolio, ["name", "shares", "price"], PortfolioFormatter())
