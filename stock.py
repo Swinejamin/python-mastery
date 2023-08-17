@@ -3,11 +3,11 @@ from sys import intern
 from decimal import Decimal
 
 import reader
-import tableformat
+from tableformat import create_formatter, print_table
 
 
 class Stock:
-    __slots__ = ('name', '_shares', '_price')
+    __slots__ = ("name", "_shares", "_price")
     _types = {"name": str, "shares": int, "price": float}
 
     def __init__(self, name, shares, price):
@@ -17,7 +17,7 @@ class Stock:
 
     @classmethod
     def from_row(cls, row):
-        values = [func(val) for func, val in zip(cls._types, row)]
+        values = [func(val) for func, val in zip(cls._types.values(), row)]
         return cls(*values)
 
     @classmethod
@@ -28,13 +28,15 @@ class Stock:
                 converted_value = type_to_check(value)
 
                 print(
-                    f'Value for {type_key} ({value}) converted from {type(value).__name__} to {type_to_check.__name__} ({converted_value})')
+                    f"Value for {type_key} ({value}) converted from {type(value).__name__} to {type_to_check.__name__} ({converted_value})"
+                )
 
                 return converted_value
 
             except ValueError:
                 raise TypeError(
-                    f"Expected {type_to_check.__name__}, received --{value}-- with type {type(value).__name__}")
+                    f"Expected {type_to_check.__name__}, received --{value}-- with type {type(value).__name__}"
+                )
 
         return value
 
@@ -44,10 +46,10 @@ class Stock:
 
     @shares.setter
     def shares(self, value):
-        converted_value = self.check_type(value, 'shares')
+        converted_value = self.check_type(value, "shares")
 
         if converted_value < 0:
-            raise ValueError('shares must be >= 0')
+            raise ValueError("shares must be >= 0")
         self._shares = converted_value
 
     @property
@@ -56,9 +58,9 @@ class Stock:
 
     @price.setter
     def price(self, value):
-        converted_value = self.check_type(value, 'price')
+        converted_value = self.check_type(value, "price")
         if converted_value <= 0:
-            raise ValueError('price must be > 0')
+            raise ValueError("price must be > 0")
         self._price = converted_value
 
     @property
@@ -68,14 +70,16 @@ class Stock:
     def sell(self, nshares):
         self._shares -= nshares
 
+    def __repr__(self):
+        return
+
 
 class DStock(Stock):
-    __slots__ = ('name', '_shares', '_price')
+    __slots__ = ("name", "_shares", "_price")
     _types = {"name": str, "shares": int, "price": Decimal}
 
     @Stock.cost.getter
     def cost(self):
-        print(type(self._price))
         return Decimal(self._shares) * self._price
 
 
@@ -97,22 +101,10 @@ def read_portfolio(filename="Data/portfolio.csv", cls=Stock):
     return stocks
 
 
-def print_portfolio(p):
-    tableformat.print_table(p, ["name", "shares", "price"])
-    # print("%10s %10s %10s" % ("name", "shares", "price"))
-    # print(("-" * 10 + " ") * 3)
-    # for s in p:
-    #     print("%10s %10d %10.2f" % (s.name, s.shares, s.price))
-
-
-s = Stock("GOOG", 100, 490.1)
-
-s.price = 42
-s.price = '42'
-s.price = 42.0
-s.price = Decimal(42.0)
-
-
-# s.price = Decimal(50.000000)
-
-# s.price = "lol"
+# portfolio = reader.read_csv_as_instances("Data/portfolio.csv", Stock)
+# formatter = create_formatter("text")
+# print_table(portfolio, ["name", "shares", "price"], formatter)
+# formatter = create_formatter("csv")
+# print_table(portfolio, ["name", "shares", "price"], formatter)
+# formatter = create_formatter("html")
+# print_table(portfolio, ["name", "shares", "price"], formatter)
