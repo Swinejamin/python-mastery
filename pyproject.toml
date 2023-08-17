@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "python-mastery"
+version = "0.1.0"
+description = ""
+authors = ["Benjamin Swineford <benjamin@mirusresearch.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+black = {extras = ["d"], version = "^23.7.0"}
+colored = "^2.2.3"
+
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
