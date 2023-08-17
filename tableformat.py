@@ -1,4 +1,6 @@
 from pprint import pprint
+from colored import Fore, Back, Style
+from html5print import HTMLBeautifier
 
 
 class TableFormatter:
@@ -25,13 +27,16 @@ class TableFormatter:
         for line in self._list_to_print:
             self.print_line(line)
 
-    def print_divider(self, separator="-"):
-        print(f"|{f'{separator * self._width}|' * self._columns}")
-
-    def add_divider(self, separator="-"):
-        self._list_to_print.append(
-            "|".join(f"{separator * self._width}" for _ in range(self._columns))
+    def divider(self, separator="-"):
+        return (
+            Fore.yellow
+            + Style.bold
+            + "|".join(f"{separator * self._width}" for _ in range(self._columns))
+            + Style.reset
         )
+
+    def add_divider(self):
+        self._list_to_print.append(self.divider())
 
 
 def print_table(records, fields, formatter):
@@ -51,7 +56,10 @@ class TextTableFormatter(TableFormatter):
         self.add_divider()
 
         self._list_to_print.append(
-            "x".join(f"{header:^{self._width}s}" for header in headers)
+            Fore.white
+            + Back.deep_sky_blue_3a
+            + "x".join(f"{header:^{self._width}s}" for header in headers)
+            + Style.reset
         )
         self.add_divider()
 
@@ -62,13 +70,14 @@ class TextTableFormatter(TableFormatter):
 
     @staticmethod
     def print_line(line=""):
-        print(f"|{line}|")
+        print(
+            f"{Fore.yellow + Style.bold}|{Style.reset}{line}{Fore.yellow + Style.bold}|{Style.reset}"
+        )
 
     def print(self):
+        self.add_divider()
         for line in self._list_to_print:
             self.print_line(line)
-
-        self.print_divider()
 
 
 class CSVTableFormatter(TableFormatter):
@@ -83,22 +92,45 @@ class CSVTableFormatter(TableFormatter):
         self._list_to_print.append(f"{','.join(f'{cell}' for cell in rowdata)}")
 
 
-class HTMLTableFormatter(TableFormatter):
-    def tr(self, content):
-        self._list_to_print.append(f"\t\t<tr> {content} </tr>")
+def html_tag(tag, content, color="yellow", indent=0):
+    tag_style = getattr(Fore, color) + Style.bold
+    return f"{tag_style}<{tag}>{Style.reset}{content}{tag_style}</{tag}>{Style.reset}"
 
+
+def tr(content):
+    return html_tag(tag="tr", content=content, indent=2)
+
+
+class HTMLTableFormatter(TableFormatter):
     def headings(self, headers):
-        self._list_to_print.append("<table>\n\t<thead>")
-        self.tr(" ".join(f"<th> {header} </th>" for header in headers))
-        self._list_to_print.append("\t</thead>\n\t<tbody>")
+        self._list_to_print.append(
+            html_tag(
+                tag="thead",
+                content=html_tag(
+                    tag="tr",
+                    content="".join(
+                        html_tag(
+                            tag="th",
+                            content=f"{Style.bold} {header.upper()} {Style.reset}",
+                            color="green",
+                        )
+                        for header in headers
+                    ),
+                ),
+            )
+        )
 
     def row(self, rowdata):
-        self.tr("".join(f"<td>  {row}  </td>" for row in rowdata))
+        tr("".join(html_tag(tag="td", content=cell, indent=3) for cell in rowdata))
 
     def print(self):
-        self._list_to_print.append(f"\t</tbody>\n</table>")
-
-        super().print()
+        table_header = html_tag(tag="thead", content=self._list_to_print[0], indent=1)
+        table_body = html_tag(
+            tag="tbody",
+            indent=1,
+            content=[self.row(r) for r in self._list_to_print],
+        )
+        print(html_tag(tag="table", content=f"{table_header}{table_body}", indent=0))
 
 
 def create_formatter(name):

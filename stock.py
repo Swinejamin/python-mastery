@@ -1,9 +1,27 @@
 from pprint import pprint
-from sys import intern
+import sys
+from sys import intern, stdout
 from decimal import Decimal
+from colored import Fore, Back, Style
+import os
 
 import reader
 from tableformat import create_formatter, print_table
+
+os.system("")
+
+
+class redirect_stdout:
+    def __init__(self, out_file):
+        self.out_file = out_file
+
+    def __enter__(self):
+        self.stdout = sys.stdout
+        sys.stdout = self.out_file
+        return self.out_file
+
+    def __exit__(self, ty, val, tb):
+        sys.stdout = self.stdout
 
 
 class Stock:
@@ -14,6 +32,16 @@ class Stock:
         self.name = name
         self.shares = shares
         self.price = price
+
+    def __repr__(self):
+        # Note: The !r format code produces the repr() string
+        return f"{type(self).__name__}({f'{Fore.blue + Style.bold}{self.name!r}{Style.reset}'}, {Fore.cyan}{self.shares!r}{Style.reset}, {Fore.green}{self.price!r}{Style.reset})"
+
+    def __eq__(self, other):
+        return isinstance(other, Stock) and (
+            (self.name, self.shares, self.price)
+            == (other.name, other.shares, other.price)
+        )
 
     @classmethod
     def from_row(cls, row):
@@ -70,9 +98,6 @@ class Stock:
     def sell(self, nshares):
         self._shares -= nshares
 
-    def __repr__(self):
-        return
-
 
 class DStock(Stock):
     __slots__ = ("name", "_shares", "_price")
@@ -101,10 +126,18 @@ def read_portfolio(filename="Data/portfolio.csv", cls=Stock):
     return stocks
 
 
-# portfolio = reader.read_csv_as_instances("Data/portfolio.csv", Stock)
-# formatter = create_formatter("text")
-# print_table(portfolio, ["name", "shares", "price"], formatter)
-# formatter = create_formatter("csv")
-# print_table(portfolio, ["name", "shares", "price"], formatter)
-# formatter = create_formatter("html")
-# print_table(portfolio, ["name", "shares", "price"], formatter)
+portfolio = reader.read_csv_as_instances("Data/portfolio.csv", Stock)
+
+
+formatter = create_formatter("text")
+
+# with redirect_stdout(open("out.txt", "w")) as file:
+#     print_table(portfolio, ["name", "shares", "price"], formatter)
+#     file.close()
+
+for format_to_use in ["text", "csv", "html"]:
+    print()
+    formatter = create_formatter(format_to_use)
+    print_table(portfolio, ["name", "shares", "price"], formatter)
+
+    print()
