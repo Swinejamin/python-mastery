@@ -6,7 +6,7 @@ from colored import Fore, Back, Style
 import os
 
 import reader
-from tableformat import create_formatter, print_table
+from tableformat import create_formatter, print_table, TableFormatter
 
 os.system("")
 
@@ -129,15 +129,10 @@ def read_portfolio(filename="Data/portfolio.csv", cls=Stock):
 portfolio = reader.read_csv_as_instances("Data/portfolio.csv", Stock)
 
 
-formatter = create_formatter("text")
+def check_formatters():
+    for format_to_use in ["text", "csv", "html"]:
+        formatter = create_formatter(format_to_use)
+        print_table(portfolio, ["name", "shares", "price"], formatter)
 
-# with redirect_stdout(open("out.txt", "w")) as file:
-#     print_table(portfolio, ["name", "shares", "price"], formatter)
-#     file.close()
 
-for format_to_use in ["text", "csv", "html"]:
-    print()
-    formatter = create_formatter(format_to_use)
-    print_table(portfolio, ["name", "shares", "price"], formatter)
-
-    print()
+# check_formatters()

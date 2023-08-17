@@ -1,8 +1,9 @@
 from pprint import pprint
 from colored import Fore, Back, Style
+from abc import ABC, abstractmethod
 
 
-class TableFormatter:
+class TableFormatter(ABC):
     def __init__(self):
         self._width = 0
         self._columns = 0
@@ -12,9 +13,11 @@ class TableFormatter:
     def width(self):
         return self._width
 
+    @abstractmethod
     def headings(self, headers):
         raise NotImplementedError()
 
+    @abstractmethod
     def row(self, rowdata):
         raise NotImplementedError()
 
@@ -22,6 +25,7 @@ class TableFormatter:
     def print_line(line=""):
         print(line)
 
+    @staticmethod
     def print(self):
         for line in self._list_to_print:
             self.print_line(line)
@@ -43,6 +47,15 @@ def print_table(records, fields, formatter):
         raise TypeError(
             f"Expected a TableFormatter, received ~{type(formatter).__name__})~"
         )
+
+    print(
+        Fore.white
+        + Style.bold
+        + Back.dark_sea_green_4b
+        + "  "
+        + " ".join(type(formatter).__name__.upper().split("TABLE"))
+    )
+    print(Style.reset + "\n")
     formatter.headings(fields)
     for r in records:
         rowdata = [getattr(r, fieldname) for fieldname in fields]
