@@ -39,6 +39,10 @@ class TableFormatter:
 
 
 def print_table(records, fields, formatter):
+    if not isinstance(formatter, TableFormatter):
+        raise TypeError(
+            f"Expected a TableFormatter, received ~{type(formatter).__name__})~"
+        )
     formatter.headings(fields)
     for r in records:
         rowdata = [getattr(r, fieldname) for fieldname in fields]
@@ -136,7 +140,6 @@ class HTMLTableFormatter(TableFormatter):
 
     def print(self):
         table_header = html_tag(tag="thead", content=self._list_to_print[0], indent=0)
-        print(self._list_to_print[1:])
 
         table_body = html_tag(
             tag="tbody",
