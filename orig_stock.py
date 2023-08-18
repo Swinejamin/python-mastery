@@ -4,9 +4,9 @@ from sys import intern, stdout
 from decimal import Decimal
 from colored import Fore, Back, Style
 
-# from typedproperty import String, Integer, Float
+from typedproperty import String, Integer, Float
 
-from validate import PositiveFloat, PositiveInteger, Positive, String, NonEmptyString
+# from validate import PositiveFloat, PositiveInteger, Positive, String, NonEmptyString
 
 import reader
 from tableformat import (
@@ -34,8 +34,10 @@ class Stock:
     _types = {"name": str, "shares": int, "price": float}
 
     name = String()
-    shares = PositiveInteger()
-    price = PositiveFloat()
+    # shares = PositiveInteger()
+    shares = Integer()
+    # price = PositiveFloat()
+    price = Float()
 
     def __init__(self, name, shares, price):
         self.name = name
