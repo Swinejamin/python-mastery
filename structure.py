@@ -5,12 +5,15 @@ import inspect
 class Structure:
     _fields = ()
 
-    @staticmethod
-    def _init():
-        locs = sys._getframe(1).f_locals
-        self = locs.pop("self")
-        for name, val in locs.items():
-            setattr(self, name, val)
+    @classmethod
+    def create_init(cls):
+        args = ','.join(cls._fields)
+        code = 'def __init__(self, {0}):\n'.format(args)
+        statements = ['    self.{0} = {0}'.format(name) for name in cls._fields]
+        code += '\n'.join(statements)
+        locs = {}
+        exec(code, locs)
+        cls.__init__ = locs['__init__']
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and (
@@ -34,11 +37,3 @@ class Structure:
             super().__setattr__(name, value)
         else:
             raise AttributeError("No attribute %s" % name)
-
-
-
-    @classmethod
-    def set_fields(cls):
-        sig = inspect.signature(cls)
-        cls._fields = tuple(sig.parameters)
-        pass

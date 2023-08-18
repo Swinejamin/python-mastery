@@ -1,10 +1,9 @@
 from structure import Structure
-
+import inspect
+from collections import namedtuple
 
 class Stock(Structure):
-
-    def __init__(self, name, shares, price):
-        self._init()
+    _fields = ('name', 'shares', 'price')
 
     @property
     def cost(self):
@@ -14,6 +13,6 @@ class Stock(Structure):
         self.shares -= nshares
 
 
-Stock.set_fields()
+Stock.create_init()
 
 
