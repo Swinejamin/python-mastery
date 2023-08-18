@@ -4,6 +4,8 @@ from sys import intern, stdout
 from decimal import Decimal
 from colored import Fore, Back, Style
 
+# from typedproperty import String, Integer, Float
+
 from validate import PositiveFloat, PositiveInteger, Positive, String, NonEmptyString
 
 import reader
@@ -31,7 +33,7 @@ class redirect_stdout:
 class Stock:
     _types = {"name": str, "shares": int, "price": float}
 
-    name = NonEmptyString()
+    name = String()
     shares = PositiveInteger()
     price = PositiveFloat()
 
@@ -47,6 +49,12 @@ class Stock:
 
     def __repr__(self):
         return f"{type(self).__name__}({self.name!r}, {self.shares!r}, {self.price!r})"
+
+    def __eq__(self, other):
+        return isinstance(other, Stock) and (
+            (self.name, self.shares, self.price)
+            == (other.name, other.shares, other.price)
+        )
 
     @classmethod
     def from_row(cls, row):
@@ -116,4 +124,4 @@ def check_formatters():
         )
 
 
-check_formatters()
+# check_formatters()
