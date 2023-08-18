@@ -2,6 +2,9 @@ from structure import Structure
 import inspect
 from collections import namedtuple
 
+from validate import ValidatedFunction, Integer
+
+
 class Stock(Structure):
     _fields = ('name', 'shares', 'price')
 
@@ -9,10 +12,12 @@ class Stock(Structure):
     def cost(self):
         return self.shares * self.price
 
-    def sell(self, nshares):
+    @ValidatedFunction
+    def sell(self, nshares: Integer):
         self.shares -= nshares
 
 
 Stock.create_init()
 
-
+s = Stock('GOOG', 100, 490.1)
+s.sell(10)
