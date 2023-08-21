@@ -1,6 +1,7 @@
 from inspect import signature
 from functools import wraps
 
+
 class Validator:
     def __init__(self, name=None):
         self.name = name
@@ -106,22 +107,46 @@ def validated(func):
     return wrapper
 
 
-class Stock:
-    def __init__(self, name, shares, price):
-        self.name = name
-        self.shares = shares
-        self.price = price
+def enforce(**annotations):
+    retcheck = annotations.pop('return_', None)
 
-    @property
-    def cost(self):
-        return self.shares * self.price
+    def decorate(func):
+        sig = signature(func)
 
-    @validated
-    def sell(self, nshares: Integer):
-        self.shares -= nshares
-        return self.shares
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            bound = sig.bind(*args, **kwargs)
+            errors = []
+
+            # Enforce argument checks
+            for name, validator in annotations.items():
+                try:
+                    validator.check(bound.arguments[name])
+                except Exception as e:
+                    errors.append(f'    {name}: {e}')
+
+            if errors:
+                raise TypeError('Bad Arguments\n' + '\n'.join(errors))
+
+            result = func(*args, **kwargs)
+
+            if retcheck:
+                try:
+                    retcheck.check(result)
+                except Exception as e:
+                    raise TypeError(f'Bad return: {e}') from None
+            return result
+
+        return wrapper
+
+    return decorate
 
 
-s = Stock('GOOG', 100, 490.1)
-print(s.cost)
-s.sell(10)
+@enforce(x=Integer, y=Integer, return_=Integer)
+def add(x, y):
+    return x + y
+
+
+print(add(2, 3))
+# print(add(2,3.0))
+# print(add('two',3.0))
