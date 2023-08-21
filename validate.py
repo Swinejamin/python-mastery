@@ -3,6 +3,9 @@ from functools import wraps
 
 
 class Validator:
+    # Collect all derived classes into a dict
+    validators = {}
+
     def __init__(self, name=None):
         self.name = name
 
@@ -12,6 +15,10 @@ class Validator:
     @classmethod
     def check(cls, value):
         return value
+
+    @classmethod
+    def __init_subclass__(cls):
+        cls.validators[cls.__name__] = cls
 
     def __set__(self, instance, value):
         instance.__dict__[self.name] = self.check(value)
