@@ -74,7 +74,7 @@ def validated(func):
     annotations = dict(func.__annotations__)
 
     # Get the return annotation (if any)
-    retcheck = annotations.pop('return', None)
+    retcheck = annotations.pop("return", None)
 
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -86,10 +86,10 @@ def validated(func):
             try:
                 validator.check(bound.arguments[name])
             except Exception as e:
-                errors.append(f'    {name}: {e}')
+                errors.append(f"    {name}: {e}")
 
         if errors:
-            raise TypeError('Bad Arguments\n' + '\n'.join(errors))
+            raise TypeError("Bad Arguments\n" + "\n".join(errors))
 
         for name, val in annotations.items():
             val.check(bound.arguments[name])
@@ -101,14 +101,14 @@ def validated(func):
             try:
                 retcheck.check(result)
             except Exception as e:
-                raise TypeError(f'Bad return: {e}') from None
+                raise TypeError(f"Bad return: {e}") from None
         return result
 
     return wrapper
 
 
 def enforce(**annotations):
-    retcheck = annotations.pop('return_', None)
+    retcheck = annotations.pop("return_", None)
 
     def decorate(func):
         sig = signature(func)
@@ -123,10 +123,10 @@ def enforce(**annotations):
                 try:
                     validator.check(bound.arguments[name])
                 except Exception as e:
-                    errors.append(f'    {name}: {e}')
+                    errors.append(f"    {name}: {e}")
 
             if errors:
-                raise TypeError('Bad Arguments\n' + '\n'.join(errors))
+                raise TypeError("Bad Arguments\n" + "\n".join(errors))
 
             result = func(*args, **kwargs)
 
@@ -134,7 +134,7 @@ def enforce(**annotations):
                 try:
                     retcheck.check(result)
                 except Exception as e:
-                    raise TypeError(f'Bad return: {e}') from None
+                    raise TypeError(f"Bad return: {e}") from None
             return result
 
         return wrapper
@@ -147,6 +147,5 @@ def add(x, y):
     return x + y
 
 
-print(add(2, 3))
 # print(add(2,3.0))
 # print(add('two',3.0))

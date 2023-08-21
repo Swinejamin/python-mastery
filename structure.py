@@ -1,23 +1,69 @@
 import sys
 import inspect
+from validate import Validator, validated
+
+
+def validate_attributes(cls):
+    """
+    Class decorator that scans a class definition for Validators
+    and builds a _fields variable that captures their definition order.
+    """
+    validators = []
+    for name, val in vars(cls).items():
+        if isinstance(val, Validator):
+            validators.append(val)
+        # Apply validated decorator to any callable with annotations
+        elif callable(val) and val.__annotations__:
+            setattr(cls, name, validated(val))
+
+    # Collect all the field names
+    cls._fields = tuple([v.name for v in validators])
+
+    # Collect type conversions. The lambda x:x is an identity
+    # function that's used in case no expected_type is found.
+    cls._types = tuple([getattr(v, "expected_type", lambda x: x) for v in validators])
+
+    # Create the __init__ method
+    if cls._fields:
+        cls.create_init()
+
+    return cls
 
 
 class Structure:
     _fields = ()
+    _types = ()
+
+    @classmethod
+    def __init_subclass__(cls):
+        validate_attributes(cls)
 
     @classmethod
     def create_init(cls):
-        args = ','.join(cls._fields)
-        code = 'def __init__(self, {0}):\n'.format(args)
-        statements = ['    self.{0} = {0}'.format(name) for name in cls._fields]
-        code += '\n'.join(statements)
+        """
+        Create an __init__ method from _fields
+        """
+        args = ",".join(cls._fields)
+        code = "def __init__(self, {0}):\n".format(args)
+        statements = ["    self.{0} = {0}".format(name) for name in cls._fields]
+        code += "\n".join(statements)
         locs = {}
         exec(code, locs)
-        cls.__init__ = locs['__init__']
+        cls.__init__ = locs["__init__"]
+
+    @classmethod
+    def from_row(cls, row):
+        rowdata = [func(val) for func, val in zip(cls._types, row)]
+        return cls(*rowdata)
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and (
-            all([getattr(self, field) == getattr(other, field) for field in self._fields])
+            all(
+                [
+                    getattr(self, field) == getattr(other, field)
+                    for field in self._fields
+                ]
+            )
         )
 
     def __init__(self, *args):

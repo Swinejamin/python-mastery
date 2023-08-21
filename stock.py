@@ -1,23 +1,24 @@
 from structure import Structure
-import inspect
-from collections import namedtuple
+from validate import String, PositiveInteger, PositiveFloat
 
-from validate import ValidatedFunction, Integer
+import reader
 
 
 class Stock(Structure):
-    _fields = ('name', 'shares', 'price')
+    name = String()
+    shares = PositiveInteger()
+    price = PositiveFloat()
 
     @property
     def cost(self):
         return self.shares * self.price
 
-    @ValidatedFunction
-    def sell(self, nshares: Integer):
+    def sell(self, nshares):
         self.shares -= nshares
 
 
-Stock.create_init()
+s = Stock.from_row(["GOOG", "100", "490.1"])
+print(s)
 
-s = Stock('GOOG', 100, 490.1)
-s.sell(10)
+
+port = reader.read_csv_as_instances("Data/portfolio.csv", Stock)
