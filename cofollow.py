@@ -27,14 +27,25 @@ def consumer(func):
     return start
 
 
-# Sample coroutine
 @consumer
 def printer():
     while True:
-        item = yield  # Receive an item sent to me
-        print(item)
+        try:
+            item = yield
+            print(item)
+        except Exception as e:
+            print("ERROR: %r" % e)
 
 
 # Example use
 if __name__ == "__main__":
-    follow("Data/stocklog.csv", printer())
+    p = printer()
+    p.send("hello")
+
+    p.send(42)
+
+    p.throw(ValueError("It failed"))
+    try:
+        int("n/a")
+    except ValueError as e:
+        p.throw(e)
