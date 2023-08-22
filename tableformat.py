@@ -42,9 +42,9 @@ class TableFormatter(ABC):
         for line in self._list_to_print:
             self.print_line(line)
 
-    def divider(self, separator="-"):
+    def divider(self, separator="-", color="yellow"):
         return (
-            Fore.yellow
+            getattr(Fore, color)
             + Style.bold
             + "|".join(f"{separator * self._width}" for _ in range(self._columns))
             + Style.reset
@@ -87,9 +87,14 @@ class TextTableFormatter(TableFormatter):
         )
         self.add_divider()
 
+        for line in self._list_to_print:
+            self.print_line(line)
+
     def row(self, rowdata):
-        self._list_to_print.append(
-            "|".join(f"{cell:^{self._width}}" for cell in rowdata)
+        self.print_line(
+            f"{Fore.yellow}|{Style.reset}".join(
+                f"{cell:^{self._width}}" for cell in rowdata
+            )
         )
 
     @staticmethod
@@ -100,6 +105,7 @@ class TextTableFormatter(TableFormatter):
 
     def print(self):
         self.add_divider()
+        pprint(self._list_to_print)
         for line in self._list_to_print:
             self.print_line(line)
 
@@ -171,17 +177,6 @@ class HTMLTableFormatter(TableFormatter):
 
 
 def create_formatter(name, column_formats=None, upper_headers=False):
-    print(
-        "\n"
-        + Fore.white
-        + Style.bold
-        + Back.dark_sea_green_4b
-        + "  "
-        + name.upper()
-        + "\t\t"
-        + Style.reset
-    )
-
     if name == "text":
         formatter_cls = TextTableFormatter
     elif name == "csv":
@@ -201,4 +196,9 @@ def create_formatter(name, column_formats=None, upper_headers=False):
         class formatter_cls(UpperHeadersMixin, formatter_cls):
             pass
 
+    print(
+        f"\n{Fore.white}{Style.bold}{Back.dark_sea_green_4b}"
+        + f"\t\t{formatter_cls.__name__}\t\t"
+        + Style.reset
+    )
     return formatter_cls()
