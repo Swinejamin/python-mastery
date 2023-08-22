@@ -16,8 +16,10 @@ class Stock(Structure):
         self.shares -= nshares
 
 
-s = Stock.from_row(["GOOG", "100", "490.1"])
-print(s)
+s = Stock("GOOG", 100, 490.1)
+s2 = Stock("GOOG", 100, 490.1)
 
 
-port = reader.read_csv_as_instances("Data/portfolio.csv", Stock)
+print(s == s2)
+print(list(s))
+print(tuple(s))

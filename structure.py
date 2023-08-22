@@ -17,6 +17,31 @@ class Structure(metaclass=StructureMeta):
     _fields = ()
     _types = ()
 
+    def __iter__(self):
+        for name in self._fields:
+            yield getattr(self, name)
+
+    def __eq__(self, other):
+        return isinstance(other, type(self)) and tuple(self) == tuple(other)
+
+    def __init__(self, *args):
+        if len(args) != len(self._fields):
+            raise TypeError("Expected %d arguments" % len(self._fields))
+        for name, arg in zip(self._fields, args):
+            setattr(self, name, arg)
+
+    def __repr__(self):
+        return "%s(%s)" % (
+            type(self).__name__,
+            ", ".join(repr(getattr(self, name)) for name in self._fields),
+        )
+
+    def __setattr__(self, name, value):
+        if name.startswith("_") or name in self._fields:
+            super().__setattr__(name, value)
+        else:
+            raise AttributeError("No attribute %s" % name)
+
     @classmethod
     def __init_subclass__(cls):
         validate_attributes(cls)
@@ -38,34 +63,6 @@ class Structure(metaclass=StructureMeta):
     def from_row(cls, row):
         rowdata = [func(val) for func, val in zip(cls._types, row)]
         return cls(*rowdata)
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) and (
-            all(
-                [
-                    getattr(self, field) == getattr(other, field)
-                    for field in self._fields
-                ]
-            )
-        )
-
-    def __init__(self, *args):
-        if len(args) != len(self._fields):
-            raise TypeError("Expected %d arguments" % len(self._fields))
-        for name, arg in zip(self._fields, args):
-            setattr(self, name, arg)
-
-    def __repr__(self):
-        return "%s(%s)" % (
-            type(self).__name__,
-            ", ".join(repr(getattr(self, name)) for name in self._fields),
-        )
-
-    def __setattr__(self, name, value):
-        if name.startswith("_") or name in self._fields:
-            super().__setattr__(name, value)
-        else:
-            raise AttributeError("No attribute %s" % name)
 
 
 def validate_attributes(cls):
